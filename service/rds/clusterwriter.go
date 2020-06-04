@@ -114,6 +114,7 @@ func (r *RDS) writeClusterBackendCatalog(cluster *config.DBCluster, logger *log.
 		service.ServiceMeta["DBInstanceIdentifier"] = aws.StringValue(instance.DBInstanceIdentifier)
 		service.ServiceMeta["RoleInCluster"] = memberRole[aws.StringValue(instance.DBInstanceIdentifier)]
 		service.ServiceMeta["ClusterName"] = aws.StringValue(cluster.DBClusterIdentifier)
+		service.ServiceMeta["AvailabilityZone"] = aws.StringValue(instance.AvailabilityZone)
 
 		if stringInSlice(service.ServiceAddress, seen.Services) {
 			logger.Errorf("Found duplicate Service ID %s - possible duplicate 'consul_service_name' RDS tag with same Replication Role", service.ServiceID)

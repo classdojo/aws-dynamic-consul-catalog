@@ -77,11 +77,15 @@ func (r *RDS) writeClusterBackendCatalog(cluster *config.DBCluster, logger *log.
 	clusterStatus := extractStatus(aws.StringValue(cluster.Status))
 
 	memberRole := map[string]string{}
+	checkNodeSuffix := map[string]string{}
+
 	for _, member := range cluster.DBClusterMembers {
 		if aws.BoolValue(member.IsClusterWriter) {
 			memberRole[aws.StringValue(member.DBInstanceIdentifier)] = "cluster-writer"
+			checkNodeSuffix[aws.StringValue(member.DBInstanceIdentifier)] = "_rw"
 		} else {
 			memberRole[aws.StringValue(member.DBInstanceIdentifier)] = "cluster-reader"
+			checkNodeSuffix[aws.StringValue(member.DBInstanceIdentifier)] = "_ro"
 		}
 	}
 
@@ -98,7 +102,7 @@ func (r *RDS) writeClusterBackendCatalog(cluster *config.DBCluster, logger *log.
 			ServicePort: int(aws.Int64Value(instance.DbInstancePort)),
 			ServiceTags: tags,
 			CheckID:     fmt.Sprintf("service:%s Node:%s", id, aws.StringValue(instance.DBInstanceIdentifier)),
-			CheckNode:   aws.StringValue(instance.DBInstanceIdentifier),
+			CheckNode:   aws.StringValue(instance.DBInstanceIdentifier) + checkNodeSuffix[aws.StringValue(instance.DBInstanceIdentifier)],
 			CheckNotes:  fmt.Sprintf("RDS Instance Status: %s", aws.StringValue(instance.DBInstanceStatus)),
 			CheckStatus: clusterStatus,
 			CheckOutput: fmt.Sprintf("Pending tasks: %s\n\nAddr: %s\n\nmanaged by aws-dynamic-consul-catalog",
